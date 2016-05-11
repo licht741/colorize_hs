@@ -21,14 +21,14 @@ parse str
   | s `elem` digits = (colorizeDigit s)++(parse ss)
   | s `elem` brackets = (colorizeBracket s)++(parse ss)
   | any (==True) [arrow `startswith` str | arrow <- arrows] = (colorizeArrow . (take 2) $ str) ++ (parse . tail $ ss)
-  | any (==True) [tClass `startswith` str | tClass <- typeclasses] = (colorizeTypeclass tClass) ++ (parse nStr)
-  | any (==True) [sWord `startswith` str | sWord <- successWords] = (colorizeSuccessWord tClass) ++ parse (nStr)
+  | any (==True) [tClass `startswith` str | tClass <- typeclasses] = (colorizeTypeclass sStr) ++ (parse nStr)
+  | any (==True) [sWord `startswith` str | sWord <- successWords] = (colorizeSuccessWord sStr) ++ (parse nStr)
   | s == '\"' = (colorizeSubstring subStr) ++ (parse nextStr)
   | otherwise = s:(parse ss)
   where
     (s:ss) = str
     (subStr, nextStr) = extractString ss
-    (tClass, nStr) = extractSubstring str
+    (sStr, nStr) = extractSubstring str
 
 green  = "\x1b[32b"
 red    = "\x1b[31m"
