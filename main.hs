@@ -2,13 +2,6 @@ import Language.Haskell.Ghcid
 import System.Console.ANSI
 import Data.String.Utils
 
-green = "\x1b[32b"
-red = "\x1b[31m"
-blue = "\x1b[94m"
-yellow = "\x1b[33m"
-def = "\x1b[0m"
-purple ="\x1b[95m"
-
 main = do
   (ghci, _) <- startGhci "ghci" (Just ".") True
   iter ghci
@@ -22,18 +15,27 @@ iter ghci = do
   putStr cRes
   iter ghci
 
+parse :: String -> String
 parse "" = ""
 parse str
   | s `elem` digits = (colorizeDigit s)++(parse ss)
   | s `elem` brackets = (colorizeBracket s)++(parse ss)
   | any (==True) [arrow `startswith` str | arrow <- arrows] = (colorizeArrow . (take 2) $ str) ++ (parse . tail $ ss)
   | any (==True) [tClass `startswith` str | tClass <- typeclasses] = (colorizeTypeclass tClass) ++ (parse nStr)
+  | any (==True) [sWord `startswith` str | sWord <- successWords] = (colorizeSuccessWord tClass) ++ parse (nStr)
   | s == '\"' = (colorizeSubstring subStr) ++ (parse nextStr)
   | otherwise = s:(parse ss)
   where
     (s:ss) = str
     (subStr, nextStr) = extractString ss
-    (tClass, nStr) = extractTypeclass str
+    (tClass, nStr) = extractSubstring str
+
+green  = "\x1b[32b"
+red    = "\x1b[31m"
+blue   = "\x1b[94m"
+yellow = "\x1b[33m"
+def    = "\x1b[0m"
+purple = "\x1b[95m"
 
 
 arrows :: [String]
@@ -45,6 +47,7 @@ arrows = ["->", "=>"]
 brackets = ['(', ')', '[', ']', '{', '}']
 digits = ['0'..'9']
 typeclasses = ["Eq", "Ord", "Read", "Show", "Num"]
+successWords = ["Ok", "done"]
 
 colorizeChar :: String -> Char -> String
 colorizeString :: String -> String -> String
@@ -64,14 +67,17 @@ colorizeArrow = colorizeString red
 colorizeSubstring :: String -> String
 colorizeSubstring = colorizeString yellow
 
+colorizeSuccessWord :: String -> String
+colorizeSuccessWord = colorizeString green
+
 extractString :: String -> (String, String)
 extractString str = (str1, str2)
   where
   str1 = ('\"':takeWhile (/= '\"') str) ++ "\""
   str2 = tail $ (dropWhile (/= '\"') str)
 
-extractTypeclass :: String -> (String, String)
-extractTypeclass str = (str1, str2)
+extractSubstring :: String -> (String, String)
+extractSubstring str = (str1, str2)
   where
   str1 = takeWhile (/= ' ') str
   str2 = dropWhile (/= ' ') $ str
